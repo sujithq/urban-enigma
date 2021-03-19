@@ -1,0 +1,107 @@
+name: CI/CD
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains 3 jobs called "build", "provision" and "deploy"
+
+  # This job builds the web app and creates artifacts
+  build:
+    # runs-on: self-hosted
+    runs-on: ubuntu-20.04
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Builds and publishes the app
+      - name: dotnet publish
+        run: cd web && dotnet publish
+
+      # Creates zip from published app
+      - name: Create zip
+        run: cd web/bin/Debug/net5.0/publish &&zip -r -D ../publish.zip .
+
+      # Creates web artifact
+      - name: Upload zip
+        uses: actions/upload-artifact@v2
+        with:
+          name: web
+          path: web/bin/Debug/net5.0/publish.zip
+
+      # Creates tf artifact
+      - name: Upload tf folder
+        uses: actions/upload-artifact@v2
+        with:
+          name: tf
+          path: tf
+  # This job provisions the infrastructure via Terraform
+  provision:
+    # runs-on: self-hosted
+    runs-on: ubuntu-20.04
+    # This job depends on the "Build" job
+    needs: build
+    # Set environment variables needed for Terraform
+    env:
+      ARM_CLIENT_ID: ${{ secrets.TF_VAR_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.TF_VAR_ARM_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.TF_VAR_ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.TF_VAR_ARM_TENANT_ID }}
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Download tf artifact
+    - name: Download tf artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: tf
+    # Setup specific version of Terraform
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 0.14.8
+    # Initializes Terraform
+    - name: Terraform Init
+      run: terraform init -backend-config="resource_group_name=rg-ado-gh" -backend-config="storage_account_name=saadogh" -backend-config="container_name=tfstate" -backend-config="key=gh.tfstate"
+    # Validates Terraform scripts
+    - name: Terraform Validate
+      run: terraform validate
+    # Creates Terraform plan
+    - name: Terraform Plan
+      run: terraform plan -out out.plan -var="location=westeurope" -var="project=ado2gh" -var="env=gh"
+    # Applies Terraform plan
+    - name: Terraform Apply
+      run: terraform apply out.plan
+
+  # This job deploys the web app
+  deploy:
+    # runs-on: self-hosted
+    runs-on: ubuntu-20.04
+    # This job depends on the "Build" job
+    needs: provision
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Downloads web artifact
+    - name: Download web artifact
+      uses: actions/download-artifact@v2
+      id: download
+      with:
+        name: web
+    # Azure Login
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS_COMMUNITY }}
+    # Deploys web app via CLI
+    - name: Deploy app via az cli
+      run: |
+        az webapp deployment source config-zip -g rg-ado2gh-gh -n app-ado2gh-gh --src ${{steps.download.outputs.download-path}}/publish.zip
