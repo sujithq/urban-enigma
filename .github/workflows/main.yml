@@ -115,7 +115,7 @@ jobs:
     # Downloads web artifact
     - name: Use Custom Action
       id: composed
-      uses: sujithq/urban-enigma/.github/actions/composed
+      uses: sujithq/urban-enigma/.github/actions/composed@v0-alpha
       with:
         who-to-greet: 'Ordina'
     - run: echo random-number ${{ steps.composed.outputs.random-number }}
