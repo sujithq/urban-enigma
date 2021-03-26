@@ -66,7 +66,7 @@ jobs:
         name: tf
     # Setup specific version of Terraform
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1.0
+      uses: hashicorp/setup-terraform@v1
       with:
         terraform_version: 0.14.8
     # Initializes Terraform
@@ -98,7 +98,7 @@ jobs:
         name: web
     # Azure Login
     - name: Azure Login
-      uses: azure/login@v1.0
+      uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS_COMMUNITY }}
     # Deploys web app via CLI
