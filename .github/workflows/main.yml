@@ -112,10 +112,9 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
-    # Downloads web artifact
     - name: Use Custom Action
       id: composed
-      uses: sujithq/urban-enigma/.github/actions/composed@v0-alpha
+      uses: sujithq/urban-enigma/.github/actions/composed@v0.1-alpha
       with:
         who-to-greet: 'Ordina'
     - run: echo random-number ${{ steps.composed.outputs.random-number }}
