@@ -106,6 +106,7 @@ jobs:
       run: |
         az webapp deployment source config-zip -g rg-ado2gh-gh -n app-ado2gh-gh --src ${{steps.download.outputs.download-path}}/publish.zip
   composed:
+    name: A job to say hello using a composed action
     # runs-on: self-hosted
     runs-on: ubuntu-20.04
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -122,7 +123,7 @@ jobs:
 
   js:
     runs-on: ubuntu-latest
-    name: A job to say hello
+    name: A job to say hello using a Js action
     steps:
     - name: Hello world action step
       id: hello
@@ -135,7 +136,7 @@ jobs:
 
   container:
     runs-on: ubuntu-latest
-    name: A job to say hello
+    name: A job to say hello using a Container action
     steps:
       # To use this repository's private action,
       # you must check out the repository
