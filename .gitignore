@@ -6,3 +6,5 @@
 !.vscode/extensions.json
 *.code-workspace
 
+
+.github/actions/js/node_modules/

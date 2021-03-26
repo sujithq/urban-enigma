@@ -120,3 +120,16 @@ jobs:
     - run: echo random-number ${{ steps.composed.outputs.random-number }}
       shell: bash
 
+  js:
+    runs-on: ubuntu-latest
+    name: A job to say hello
+    steps:
+    - name: Hello world action step
+      id: hello
+      uses: sujithq/urban-enigma/.github/actions/js@v0.3-alpha
+      with:
+        who-to-greet: 'Ordina'
+    # Use the output from the `hello` step
+    - name: Get the output time
+      run: echo "The time was ${{ steps.hello.outputs.time }}"
+
