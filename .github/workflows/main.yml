@@ -133,3 +133,19 @@ jobs:
     - name: Get the output time
       run: echo "The time was ${{ steps.hello.outputs.time }}"
 
+  container:
+    runs-on: ubuntu-latest
+    name: A job to say hello
+    steps:
+      # To use this repository's private action,
+      # you must check out the repository
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Hello world action step
+        uses: sujithq/urban-enigma/.github/actions/container@v0.4-alpha
+        id: hello
+        with:
+          who-to-greet: 'Ordina'
+      # Use the output from the `hello` step
+      - name: Get the output time
+        run: echo "The time was ${{ steps.hello.outputs.time }}"
